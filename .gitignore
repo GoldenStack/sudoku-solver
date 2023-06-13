@@ -1,0 +1,7 @@
+
+# Output files
+debug/
+target/
+
+# Cargo.toml lock file
+Cargo.lock
