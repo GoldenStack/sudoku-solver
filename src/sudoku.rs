@@ -4,9 +4,9 @@ pub type TileType = u16;
 pub const ALL_POSSIBLE: TileType = 0b111111111;
 
 pub const SIZE: usize = 9;
+pub const BOARD_SIZE: usize = SIZE * SIZE;
 
 pub const TILE_NEIGHBORS: usize = 20; // 8 in section + 6 in each direction
-pub const BOARD_SIZE: usize = SIZE * SIZE;
 
 pub type Neighbors = [usize; TILE_NEIGHBORS];
 pub type CachedNeighbors = [Neighbors; BOARD_SIZE];
