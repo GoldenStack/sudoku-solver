@@ -1,7 +1,8 @@
 const sudoku = @import("sudoku.zig");
 
 pub fn verify_example(start: [81]u8, solution: [81]u8) bool {
-    const board = @constCast(&sudoku.board_from_tiles(start));
+    var raw_board = sudoku.board_from_tiles(start);
+    const board = &raw_board;
 
     if (!sudoku.solve(board)) {
         return false;
@@ -11,7 +12,7 @@ pub fn verify_example(start: [81]u8, solution: [81]u8) bool {
 
     for (&solution, 0..) |*n, index| {
         if (n.* != 0) {
-            solved |= @as(u729, 0b1) << @intCast((n.* - 1) * 9 * index);
+            solved |= @as(u729, 0b1) << @intCast((n.* - 1) + 9 * index);
         }
     }
 
