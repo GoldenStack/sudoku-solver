@@ -52,7 +52,7 @@ fn neighbors_for_board() [81][20]usize {
 pub const Neighbors = neighbors_for_board();
 
 pub fn board_from_tiles(tiles: [81]u8) u729 {
-    var raw_board: u729 = 0;
+    var raw_board: u729 = std.math.maxInt(u729);
     const board: *u729 = &raw_board;
 
     for (&tiles, 0..) |*tile, index| {
@@ -65,7 +65,6 @@ pub fn board_from_tiles(tiles: [81]u8) u729 {
 }
 
 pub fn get(board: *u729, index: u8) Tile {
-    // std.debug.print("{any},{any}\n", .{index, @as(u10, index) * 9});
     return @truncate(board.* >> (@as(u10, index) * 9));
 }
 
@@ -76,7 +75,7 @@ pub fn set(board: *u729, index: u8, value: u8) bool {
 }
 
 pub fn set_mask(board: *u729, index: u8, mask: Tile) bool {
-    board.* &= @as(u729, mask) << @as(u10, index) * 9;
+    board.* &= ~(@as(u729, ~mask) << (@as(u10, index) * 9));
 
     return set_neighbors_mask(board, index, mask);
 }
@@ -92,7 +91,7 @@ fn set_neighbors_mask(board: *u729, index: usize, mask: Tile) bool {
             return false;
         }
 
-        board.* &= @as(u729, new) << @intCast(neighbor * 9);
+        board.* &= ~(@as(u729, ~new) << @intCast(neighbor * 9));
 
         // todo can probably optimize this; like if popCount(new)==1 and old & mask (or whatever i need to write to indicate if it was a change?? a and not b or smt)
         if (@popCount(new) == 1 and @popCount(old) == 2) {
@@ -139,9 +138,6 @@ pub fn solve(board: *u729) bool {
             if (solve(board)) {
                 return true;
             } else {
-                // if (board.* != old_board) {
-                    // std.debug.print("works lol", .{});
-                // }
                 board.* = old_board;
             }
         }
