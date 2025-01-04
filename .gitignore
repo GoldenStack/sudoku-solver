@@ -2,6 +2,8 @@
 # Output files
 debug/
 target/
+.zig-cache/
+zig-out/
 
 # Cargo.toml lock file
 Cargo.lock
