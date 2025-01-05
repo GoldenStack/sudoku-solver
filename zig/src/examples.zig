@@ -8,7 +8,7 @@ pub fn verify_example(start: [81]u8, solution: [81]u8) bool {
         return false;
     }
 
-    var solved: sudoku.Board = [_]u1{0} ** 729;
+    var solved = [_]u1{0} ** 729;
 
     for (&solution, 0..) |*n, index| {
         if (n.* != 0) {
@@ -16,7 +16,7 @@ pub fn verify_example(start: [81]u8, solution: [81]u8) bool {
         }
     }
 
-    for (board.*, solved) |a, b| {
+    for (board.states, solved) |a, b| {
         if (a != b) {
             return false;
         }

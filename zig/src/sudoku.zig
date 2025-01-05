@@ -49,11 +49,14 @@ fn neighbors_for_board() [81][20]usize {
 
 pub const Neighbors = neighbors_for_board();
 
-pub const Board = [729]u1;
+pub const Board = struct { states: [729]u1, counts: [81]u32 };
 
 pub fn board_from_tiles(tiles: [81]u8) Board {
-    var raw_board = [_]u1{1} ** 729;
-    const board = &raw_board;
+    var combined = Board{
+        .states = [_]u1{1} ** 729,
+        .counts = [_]u32{9} ** 81,
+    };
+    const board = &combined;
 
     for (&tiles, 0..) |*tile, index| {
         if (tile.* != 0) {
@@ -66,33 +69,27 @@ pub fn board_from_tiles(tiles: [81]u8) Board {
 
 pub fn get_any(board: Board, index: usize) usize {
     inline for (0..9) |i| {
-        if (board[index * 9 + i] == 1) return i;
+        if (board.states[index * 9 + i] == 1) return i;
     }
     unreachable;
 }
 
-pub fn get_count(board: Board, index: usize) usize {
-    var count: usize = 0;
-    inline for (0..9) |i| {
-        count += @as(usize, board[index * 9 + i]);
-    }
-    return count;
-}
-
 pub fn set(board: *Board, index: usize, value: usize) bool {
     inline for (0..9) |i| {
-        board[index * 9 + i] = @intFromBool(i == value);
+        board.states[index * 9 + i] = @intFromBool(i == value);
     }
+    board.counts[index] = 1;
 
     return set_neighbors_mask(board, index, value);
 }
 
 fn set_neighbors_mask(board: *Board, index: usize, value: usize) bool {
     inline for (Neighbors[index]) |neighbor| {
-        if (board[neighbor * 9 + value] != 0) {
-            const old_count = get_count(board.*, neighbor);
+        if (board.states[neighbor * 9 + value] != 0) {
+            const old_count = board.counts[neighbor];
 
-            board[neighbor * 9 + value] = 0;
+            board.states[neighbor * 9 + value] = 0;
+            board.counts[neighbor] -= 1;
 
             if (old_count == 1) {
                 return false;
@@ -114,7 +111,7 @@ pub fn solve(board: *Board) bool {
     var least_ones: usize = 127; // Arbitrary value
 
     for (0..81) |index| {
-        const ones_in_tile = get_count(board.*, index);
+        const ones_in_tile = board.counts[index];
 
         if (ones_in_tile > 1 and ones_in_tile < least_ones) {
             best_tile = index;
@@ -133,7 +130,7 @@ pub fn solve(board: *Board) bool {
     var checked_number: usize = 0;
 
     while (possibilities > 0) : (checked_number += 1) {
-        if (board[tile * 9 + checked_number] == 0) continue;
+        if (board.states[tile * 9 + checked_number] == 0) continue;
 
         if (set(board, tile, checked_number)) {
             if (solve(board)) {
