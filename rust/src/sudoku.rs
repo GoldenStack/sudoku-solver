@@ -135,8 +135,9 @@ impl Board {
 
         *unsafe { self.tiles.get_unchecked_mut(neighbor) } = new;
 
-        let has_1_one = new & (new - 1) == 0;
-        has_1_one
+        let new_has_1_one = new & (new - 1) == 0;
+        new_has_1_one
+            // has 2 ones
             && ((old ^ mask) & ((old ^ mask) - 1)) == 0
             && !self.set_neighbors_mask(neighbor, new)
     }
