@@ -109,7 +109,7 @@ impl Board {
             let old = self.tiles[neighbor];
             let new = old & !mask & ALL_POSSIBLE;
 
-            if new.count_ones() == 0 {
+            if new == 0 {
                 return false;
             }
             
