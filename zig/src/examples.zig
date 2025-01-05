@@ -8,15 +8,21 @@ pub fn verify_example(start: [81]u8, solution: [81]u8) bool {
         return false;
     }
 
-    var solved: u729 = 0;
+    var solved: sudoku.Board = [_]u1{0} ** 729;
 
     for (&solution, 0..) |*n, index| {
         if (n.* != 0) {
-            solved |= @as(u729, 0b1) << @intCast((n.* - 1) + 9 * index);
+            solved[index * 9 + @as(usize, @intCast(n.* - 1))] = 1;
         }
     }
 
-    return board.* == solved;
+    for (board.*, solved) |a, b| {
+        if (a != b) {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 pub const EASY: [81]u8 = .{

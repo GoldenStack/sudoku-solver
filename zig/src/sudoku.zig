@@ -49,51 +49,58 @@ fn neighbors_for_board() [81][20]usize {
 
 pub const Neighbors = neighbors_for_board();
 
-pub fn board_from_tiles(tiles: [81]u8) u729 {
-    var raw_board: u729 = std.math.maxInt(u729);
-    const board: *u729 = &raw_board;
+pub const Board = [729]u1;
+
+pub fn board_from_tiles(tiles: [81]u8) Board {
+    var raw_board = [_]u1{1} ** 729;
+    const board = &raw_board;
 
     for (&tiles, 0..) |*tile, index| {
         if (tile.* != 0) {
-            _ = set(board, @intCast(index), tile.*);
+            _ = set(board, index, tile.* - 1);
         }
     }
 
     return board.*;
 }
 
-pub fn get(board: u729, index: u8) u9 {
-    return @truncate(board >> (@as(u10, index) * 9));
+pub fn get_any(board: Board, index: usize) usize {
+    inline for (0..9) |i| {
+        if (board[index * 9 + i] == 1) return i;
+    }
+    unreachable;
 }
 
-pub fn set(board: *u729, index: u8, value: u8) bool {
-    const mask = @as(u9, 1) << @intCast(value - 1);
-
-    return set_mask(board, index, mask);
+pub fn get_count(board: Board, index: usize) usize {
+    var count: usize = 0;
+    inline for (0..9) |i| {
+        count += @as(usize, board[index * 9 + i]);
+    }
+    return count;
 }
 
-pub fn set_mask(board: *u729, index: u8, mask: u9) bool {
-    board.* &= ~(@as(u729, ~mask) << (@as(u10, index) * 9));
+pub fn set(board: *Board, index: usize, value: usize) bool {
+    inline for (0..9) |i| {
+        board[index * 9 + i] = @intFromBool(i == value);
+    }
 
-    return set_neighbors_mask(board, index, mask);
+    return set_neighbors_mask(board, index, value);
 }
 
-fn set_neighbors_mask(board: *u729, index: usize, mask: u9) bool {
+fn set_neighbors_mask(board: *Board, index: usize, value: usize) bool {
     for (Neighbors[index]) |neighbor| {
-        // std.debug.print("TILE: {any}, NEIGHBOR: {any}\n", .{index, neighbor});
+        if (board[neighbor * 9 + value] == 0) continue;
 
-        const old = get(board.*, @intCast(neighbor));
-        const new = old & ~mask & 0b111111111;
+        const old_count = get_count(board.*, neighbor);
 
-        if (new == 0) { // No possibilities for new, so board was wrong
+        board[neighbor * 9 + value] = 0;
+
+        if (old_count == 1) {
             return false;
         }
 
-        board.* &= ~(@as(u729, ~new) << @intCast(neighbor * 9));
-
-        // todo can probably optimize this; like if popCount(new)==1 and old & mask (or whatever i need to write to indicate if it was a change?? a and not b or smt)
-        if (@popCount(new) == 1 and @popCount(old) == 2) {
-            if (!set_neighbors_mask(board, neighbor, new)) {
+        if (old_count == 2) {
+            if (!set_neighbors_mask(board, neighbor, get_any(board.*, neighbor))) {
                 return false;
             }
         }
@@ -102,13 +109,12 @@ fn set_neighbors_mask(board: *u729, index: usize, mask: u9) bool {
     return true;
 }
 
-pub fn solve(board: *u729) bool {
+pub fn solve(board: *Board) bool {
     var best_tile: ?usize = null;
     var least_ones: usize = 127; // Arbitrary value
 
     for (0..81) |index| {
-        const tile = get(board.*, @intCast(index));
-        const ones_in_tile = @popCount(tile);
+        const ones_in_tile = get_count(board.*, index);
 
         if (ones_in_tile > 1 and ones_in_tile < least_ones) {
             best_tile = index;
@@ -123,21 +129,19 @@ pub fn solve(board: *u729) bool {
     const old_board = board.*;
 
     const tile = best_tile.?;
-    var tile_value = get(board.*, @intCast(tile));
+    var possibilities = least_ones;
     var checked_number: usize = 0;
 
-    while (tile_value != 0) : ({
-        tile_value >>= 1;
-        checked_number += 1;
-    }) {
-        if (tile_value & 1 == 0) continue;
+    while (possibilities > 0) : (checked_number += 1) {
+        if (board[tile * 9 + checked_number] == 0) continue;
 
-        if (set_mask(board, @intCast(tile), @as(u9, 1) << @intCast(checked_number))) {
+        if (set(board, tile, checked_number)) {
             if (solve(board)) {
                 return true;
             }
         }
 
+        possibilities -= 1;
         board.* = old_board;
     }
 
