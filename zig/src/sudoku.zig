@@ -64,8 +64,8 @@ pub fn board_from_tiles(tiles: [81]u8) u729 {
     return board.*;
 }
 
-pub fn get(board: *u729, index: u8) Tile {
-    return @truncate(board.* >> (@as(u10, index) * 9));
+pub fn get(board: u729, index: u8) Tile {
+    return @truncate(board >> (@as(u10, index) * 9));
 }
 
 pub fn set(board: *u729, index: u8, value: u8) bool {
@@ -84,7 +84,7 @@ fn set_neighbors_mask(board: *u729, index: usize, mask: Tile) bool {
     for (Neighbors[index]) |neighbor| {
         // std.debug.print("TILE: {any}, NEIGHBOR: {any}\n", .{index, neighbor});
 
-        const old = get(board, @intCast(neighbor));
+        const old = get(board.*, @intCast(neighbor));
         const new = old & ~mask & 0b111111111;
 
         if (new == 0) { // No possibilities for new, so board was wrong
@@ -109,7 +109,7 @@ pub fn solve(board: *u729) bool {
     var least_ones: usize = 127; // Arbitrary value
 
     for (0..81) |index| {
-        const tile = get(board, @intCast(index));
+        const tile = get(board.*, @intCast(index));
         const ones_in_tile = @popCount(tile);
 
         if (ones_in_tile > 1 and ones_in_tile < least_ones) {
@@ -119,14 +119,14 @@ pub fn solve(board: *u729) bool {
     }
 
     if (best_tile == null) {
-        return false;
+        return true;
     }
 
     const old_board = board.*;
 
     const tile = best_tile.?;
-    var tile_value = get(board, @intCast(tile));
-    var checked_number: usize = 1;
+    var tile_value = get(board.*, @intCast(tile));
+    var checked_number: usize = 0;
 
     while (tile_value != 0) : ({
         tile_value >>= 1;
@@ -134,13 +134,13 @@ pub fn solve(board: *u729) bool {
     }) {
         if (tile_value & 1 == 0) continue;
 
-        if (set(board, @intCast(tile), @intCast(checked_number))) {
+        if (set_mask(board, @intCast(tile), @as(u9, 1) << @intCast(checked_number))) {
             if (solve(board)) {
                 return true;
-            } else {
-                board.* = old_board;
             }
         }
+        
+        board.* = old_board;
     }
 
     return false; // No possibilities resulted in a solve. Rip!
