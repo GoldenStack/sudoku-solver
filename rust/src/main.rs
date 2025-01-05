@@ -15,7 +15,7 @@ fn main() {
 
     // Test settings
     let warmup_iterations = 50_000;
-    let iterations = 200_000;
+    let iterations = 500_000;
 
     let test_case = examples::EASY;
 

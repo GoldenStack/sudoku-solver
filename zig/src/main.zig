@@ -12,7 +12,7 @@ pub fn main() !void {
 
     // Test settings
     const warmup_iterations = 50_000;
-    const iterations = 200_000;
+    const iterations = 500_000;
 
     const test_case = examples.EASY;
 
