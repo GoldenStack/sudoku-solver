@@ -7,8 +7,8 @@ pub fn main() !void {
 
     // Verify that the code can actually solve the examples
     try stdout.print("Verified Easy: {any}\n", .{examples.verify_example(examples.EASY, examples.EASY_SOLUTION)});
-    try stdout.print("Verified Medium: {any}\n", .{ examples.verify_example(examples.MEDIUM, examples.MEDIUM_SOLUTION) });
-    try stdout.print("Verified Hard: {any}\n", .{ examples.verify_example(examples.HARD, examples.HARD_SOLUTION) });
+    try stdout.print("Verified Medium: {any}\n", .{examples.verify_example(examples.MEDIUM, examples.MEDIUM_SOLUTION)});
+    try stdout.print("Verified Hard: {any}\n", .{examples.verify_example(examples.HARD, examples.HARD_SOLUTION)});
 
     // Test settings
     const warmup_iterations = 50_000;
@@ -42,6 +42,5 @@ pub fn main() !void {
     const duration_ms = duration_float / 1e6;
     const per_second = 1e9 / ns_per_iter;
 
-    try stdout.print("Average time for {} iterations: {d:.3}µs (took {d:.3}ms; {d:.0}/sec)\n", .{iterations, ns_per_iter / 1000, duration_ms, per_second});
-
+    try stdout.print("Average time for {} iterations: {d:.3}µs (took {d:.3}ms; {d:.0}/sec)\n", .{ iterations, ns_per_iter / 1000, duration_ms, per_second });
 }

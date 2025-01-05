@@ -139,7 +139,7 @@ pub fn solve(board: *u729) bool {
                 return true;
             }
         }
-        
+
         board.* = old_board;
     }
 
