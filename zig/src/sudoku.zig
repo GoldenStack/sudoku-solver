@@ -80,17 +80,17 @@ pub fn set(board: *Board, index: usize, value: usize) bool {
     }
     board.counts[index] = 1;
 
-    return set_neighbors_mask(board, index, value);
+    return set_neighbors(board, index, value);
 }
 
-fn set_neighbors_mask(board: *Board, index: usize, value: usize) bool {
+fn set_neighbors(board: *Board, index: usize, value: usize) bool {
     inline for (Neighbors[index]) |neighbor| {
         if (board.states[neighbor * 9 + value] != 0) {
             board.states[neighbor * 9 + value] = 0;
             board.counts[neighbor] -= 1;
 
             const count = board.counts[neighbor];
-            if (count == 0 or (count == 1 and !set_neighbors_mask(board, neighbor, get_any(board.*, neighbor)))) {
+            if (count == 0 or (count == 1 and !set_neighbors(board, neighbor, get_any(board.*, neighbor)))) {
                 return false;
             }
         }
