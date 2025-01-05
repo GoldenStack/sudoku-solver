@@ -1,0 +1,8 @@
+/flamegraph.svg
+/perf.data
+/perf.data.old
+/target
+
+callgrind.out.*
+vgcore.*
+

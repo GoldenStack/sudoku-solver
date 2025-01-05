@@ -1,17 +1,19 @@
-mod sudoku;
 mod examples;
+mod sudoku;
 
-use sudoku::*;
 use examples::*;
+use sudoku::*;
 
-use std::time::{SystemTime, Duration};
+use std::time::{Duration, SystemTime};
 
 fn main() {
-    
     // Verify that the code actually can solve the examples
-    println!("Verified Easy: {}",   verify_example(EASY, EASY_SOLUTION));
-    println!("Verified Medium: {}", verify_example(MEDIUM, MEDIUM_SOLUTION));
-    println!("Verified Hard: {}",   verify_example(HARD, HARD_SOLUTION));
+    println!("Verified Easy: {}", verify_example(EASY, EASY_SOLUTION));
+    println!(
+        "Verified Medium: {}",
+        verify_example(MEDIUM, MEDIUM_SOLUTION)
+    );
+    println!("Verified Hard: {}", verify_example(HARD, HARD_SOLUTION));
 
     // Test settings
     let warmup_iterations = 50_000;
@@ -40,7 +42,8 @@ fn main() {
     let average = duration / iterations;
     let per_second = Duration::from_secs(1).as_nanos() / average.as_nanos();
 
-
-    println!("Average Time for {:?} iterations: {:?} (took {:.3?}; {:?}/sec)", iterations, average, duration, per_second);
-
+    println!(
+        "Average Time for {:?} iterations: {:?} (took {:.3?}; {:?}/sec)",
+        iterations, average, duration, per_second
+    );
 }
