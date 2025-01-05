@@ -1,5 +1,6 @@
+use std::fmt::{self, Debug};
 
-pub type TileType = u16;
+pub type TileType = u32;
 
 pub const ALL_POSSIBLE: TileType = 0b111111111;
 
@@ -12,7 +13,6 @@ pub type Neighbors = [usize; TILE_NEIGHBORS];
 pub type CachedNeighbors = [Neighbors; BOARD_SIZE];
 
 pub const NEIGHBOR_MAP: CachedNeighbors = {
-
     const fn get_neighbors(x: usize, y: usize) -> Neighbors {
         let mut neighbors = [0; TILE_NEIGHBORS];
         let mut counter: usize = 0;
@@ -36,7 +36,8 @@ pub const NEIGHBOR_MAP: CachedNeighbors = {
         }
 
         let mut index = 0;
-        while index < 9 { // Should be separated into x and y for fewer magic numbers
+        while index < 9 {
+            // Should be separated into x and y for fewer magic numbers
             if (x / 3) != (index / 3) {
                 neighbors[counter] = index + y * SIZE;
                 counter += 1;
@@ -51,7 +52,7 @@ pub const NEIGHBOR_MAP: CachedNeighbors = {
 
         neighbors
     }
-    
+
     let mut items = [[0; TILE_NEIGHBORS]; BOARD_SIZE];
 
     let mut index: usize = 0;
@@ -63,7 +64,7 @@ pub const NEIGHBOR_MAP: CachedNeighbors = {
     items
 };
 
-#[derive(Clone, Copy)]
+#[derive(Clone)]
 pub struct Board {
     tiles: [TileType; BOARD_SIZE],
 }
@@ -80,7 +81,7 @@ impl Board {
 
         board
     }
-    
+
     pub fn new() -> Self {
         Board {
             tiles: [ALL_POSSIBLE; BOARD_SIZE],
@@ -97,43 +98,56 @@ impl Board {
     }
 
     #[inline(always)]
-    pub fn set_mask(&mut self, index: usize, mask: u16) -> bool {
+    pub fn set_mask(&mut self, index: usize, mask: TileType) -> bool {
         self.tiles[index] = mask;
         self.set_neighbors_mask(index, mask)
     }
 
-    #[inline(always)]
-    pub fn set_neighbors_mask(&mut self, index: usize, mask: u16) -> bool {
-        for neighbor in NEIGHBOR_MAP[index] {
+    #[inline(never)]
+    fn set_neighbors_mask(&mut self, index: usize, mask: TileType) -> bool {
+        let neighbors = &NEIGHBOR_MAP[index];
 
-            let old = self.tiles[neighbor];
-            let new = old & !mask & ALL_POSSIBLE;
+        macro_rules! set_neighbors_mask_loop {
+            ($($index:expr),*) => {
+                $(
+                    if self.set_neighbor_mask(neighbors[$index], mask) {
+                        return false;
+                    }
+                )*
+            };
+        }
 
-            if new == 0 {
-                return false;
-            }
-            
-            self.tiles[neighbor] = new;
-
-            if new.count_ones() == 1 && old.count_ones() == 2 {
-                if !self.set_neighbors_mask(neighbor, new) {
-                    return false;
-                }
-            }
-
-        };
+        set_neighbors_mask_loop!(
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19
+        );
 
         true
     }
 
-    pub fn solve(&mut self) -> bool {
+    #[inline(always)]
+    fn set_neighbor_mask(&mut self, neighbor: usize, mask: TileType) -> bool {
+        let old = *unsafe { self.tiles.get_unchecked(neighbor) };
+        let new = old & (!mask & ALL_POSSIBLE);
 
+        if new == 0 {
+            return true;
+        }
+
+        *unsafe { self.tiles.get_unchecked_mut(neighbor) } = new;
+
+        let new_has_1_one = new & (new - 1) == 0;
+        new_has_1_one
+            // has 2 ones
+            && ((old ^ mask) & ((old ^ mask) - 1)) == 0
+            && !self.set_neighbors_mask(neighbor, new)
+    }
+
+    pub fn solve(&mut self) -> bool {
         let mut optimal = None;
         let mut optimal_ones = 999; // Arbitrary value
         for (index, tile) in self.tiles.iter().enumerate() {
             let ones = tile.count_ones();
             if ones > 1 && ones < optimal_ones {
-                
                 optimal = Some(index);
                 optimal_ones = ones;
             }
@@ -144,17 +158,15 @@ impl Board {
             None => return true,
         };
 
-        let old_tiles = self.tiles.clone();
+        let old_tiles = self.tiles;
 
         let mut tile_val = self.tiles[optimal];
 
         let mut num = 0;
         while tile_val != 0 {
             if tile_val & 1 == 1 {
-                if self.set_mask(optimal, 0b1 << num) {
-                    if self.solve() {
-                        return true;
-                    }
+                if self.set_mask(optimal, 0b1 << num) && self.solve() {
+                    return true;
                 }
                 self.tiles = old_tiles;
             }
@@ -165,19 +177,19 @@ impl Board {
     }
 }
 
-
-impl std::fmt::Debug for Board {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-
-        let align = self.tiles
-                .map(u16::count_ones)
-                .iter().max()
-                .map(|v| *v as usize)
-                .unwrap();
+impl Debug for Board {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let align = self
+            .tiles
+            .map(TileType::count_ones)
+            .iter()
+            .max()
+            .map(|v| *v as usize)
+            .unwrap();
 
         for y in 0..9 {
             if y % 3 == 0 {
-                write!(f, "{}\n", "---".repeat(10))?;
+                writeln!(f, "{}", "---".repeat(10))?;
             }
 
             for x in 0..9 {
@@ -190,14 +202,14 @@ impl std::fmt::Debug for Board {
                 let mut count = 1;
                 while tile != 0 {
                     if tile & 1 != 0 {
-                        display += &&count.to_string();
+                        display += &count.to_string();
                     }
                     tile >>= 1;
                     count += 1;
                 }
                 write!(f, "{: >align$} ", display)?;
             }
-            write!(f, "\n")?;
+            writeln!(f)?;
         }
         Ok(())
     }

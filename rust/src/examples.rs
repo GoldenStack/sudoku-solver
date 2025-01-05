@@ -4,14 +4,12 @@ pub fn verify_example(board: [u8; BOARD_SIZE], solution: [u8; BOARD_SIZE]) -> bo
     let mut board = Board::from_tiles(board);
     board.solve();
 
-    let solution = solution.map(|n| 
-        if n == 0 { 0 }
-        else { 0b1u16 << (n - 1) }
-    );
+    let solution = solution.map(|n| if n == 0 { 0 } else { 0b1 << (n - 1) });
 
     board.tiles() == &solution
 }
 
+#[rustfmt::skip]
 pub const EASY: [u8; BOARD_SIZE] = [
     8, 0, 0,  9, 0, 2,  6, 0, 3,
     1, 2, 4,  8, 0, 3,  0, 0, 0,
@@ -26,6 +24,7 @@ pub const EASY: [u8; BOARD_SIZE] = [
     0, 7, 2,  0, 5, 0,  0, 8, 0,
 ];
 
+#[rustfmt::skip]
 pub const EASY_SOLUTION: [u8; BOARD_SIZE] = [
     8, 5, 7,  9, 1, 2,  6, 4, 3,
     1, 2, 4,  8, 6, 3,  7, 9, 5,
@@ -40,7 +39,7 @@ pub const EASY_SOLUTION: [u8; BOARD_SIZE] = [
     4, 7, 2,  3, 5, 1,  9, 8, 6,
 ];
 
-
+#[rustfmt::skip]
 pub const MEDIUM: [u8; BOARD_SIZE] = [
     9, 0, 0,  0, 0, 8,  5, 0, 0,
     0, 0, 5,  0, 0, 4,  0, 0, 0,
@@ -55,6 +54,7 @@ pub const MEDIUM: [u8; BOARD_SIZE] = [
     0, 0, 3,  0, 9, 0,  0, 0, 0,
 ];
 
+#[rustfmt::skip]
 pub const MEDIUM_SOLUTION: [u8; BOARD_SIZE] = [
     9, 6, 1,  3, 7, 8,  5, 4, 2,
     3, 8, 5,  2, 6, 4,  7, 9, 1,
@@ -69,7 +69,7 @@ pub const MEDIUM_SOLUTION: [u8; BOARD_SIZE] = [
     1, 7, 3,  4, 9, 2,  8, 5, 6,
 ];
 
-
+#[rustfmt::skip]
 pub const HARD: [u8; BOARD_SIZE] = [
     0, 0, 0,  0, 5, 0,  9, 4, 0,
     1, 0, 0,  0, 3, 2,  0, 0, 0,
@@ -84,6 +84,7 @@ pub const HARD: [u8; BOARD_SIZE] = [
     0, 0, 5,  0, 0, 0,  0, 0, 0,
 ];
 
+#[rustfmt::skip]
 pub const HARD_SOLUTION: [u8; BOARD_SIZE] = [
     6, 2, 3,  1, 5, 7,  9, 4, 8,
     1, 9, 8,  4, 3, 2,  5, 6, 7,
@@ -98,8 +99,9 @@ pub const HARD_SOLUTION: [u8; BOARD_SIZE] = [
     7, 3, 5,  2, 1, 6,  4, 8, 9,
 ];
 
-
 // https://abcnews.go.com/blogs/headlines/2012/06/can-you-solve-the-hardest-ever-sudoku
+#[rustfmt::skip]
+#[allow(unused)]
 pub const REALLY_HARD: [u8; BOARD_SIZE] = [
     8, 0, 0,  0, 0, 0,  0, 0, 0,
     0, 0, 3,  6, 0, 0,  0, 0, 0,
