@@ -150,6 +150,7 @@ impl Board {
             if ones > 1 && ones < optimal_ones {
                 optimal = Some(index);
                 optimal_ones = ones;
+                if ones == 2 { break; }
             }
         }
 
