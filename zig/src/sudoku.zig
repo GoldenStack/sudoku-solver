@@ -86,19 +86,12 @@ pub fn set(board: *Board, index: usize, value: usize) bool {
 fn set_neighbors_mask(board: *Board, index: usize, value: usize) bool {
     inline for (Neighbors[index]) |neighbor| {
         if (board.states[neighbor * 9 + value] != 0) {
-            const old_count = board.counts[neighbor];
-
             board.states[neighbor * 9 + value] = 0;
             board.counts[neighbor] -= 1;
 
-            if (old_count == 1) {
+            const count = board.counts[neighbor];
+            if (count == 0 or (count == 1 and !set_neighbors_mask(board, neighbor, get_any(board.*, neighbor)))) {
                 return false;
-            }
-
-            if (old_count == 2) {
-                if (!set_neighbors_mask(board, neighbor, get_any(board.*, neighbor))) {
-                    return false;
-                }
             }
         }
     }
@@ -116,6 +109,7 @@ pub fn solve(board: *Board) bool {
         if (ones_in_tile > 1 and ones_in_tile < least_ones) {
             best_tile = index;
             least_ones = ones_in_tile;
+            if (ones_in_tile == 2) break;
         }
     }
 
@@ -132,10 +126,8 @@ pub fn solve(board: *Board) bool {
     while (possibilities > 0) : (checked_number += 1) {
         if (board.states[tile * 9 + checked_number] == 0) continue;
 
-        if (set(board, tile, checked_number)) {
-            if (solve(board)) {
-                return true;
-            }
+        if (set(board, tile, checked_number) and solve(board)) {
+            return true;
         }
 
         possibilities -= 1;
