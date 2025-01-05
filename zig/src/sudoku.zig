@@ -88,20 +88,20 @@ pub fn set(board: *Board, index: usize, value: usize) bool {
 }
 
 fn set_neighbors_mask(board: *Board, index: usize, value: usize) bool {
-    for (Neighbors[index]) |neighbor| {
-        if (board[neighbor * 9 + value] == 0) continue;
+    inline for (Neighbors[index]) |neighbor| {
+        if (board[neighbor * 9 + value] != 0) {
+            const old_count = get_count(board.*, neighbor);
 
-        const old_count = get_count(board.*, neighbor);
+            board[neighbor * 9 + value] = 0;
 
-        board[neighbor * 9 + value] = 0;
-
-        if (old_count == 1) {
-            return false;
-        }
-
-        if (old_count == 2) {
-            if (!set_neighbors_mask(board, neighbor, get_any(board.*, neighbor))) {
+            if (old_count == 1) {
                 return false;
+            }
+
+            if (old_count == 2) {
+                if (!set_neighbors_mask(board, neighbor, get_any(board.*, neighbor))) {
+                    return false;
+                }
             }
         }
     }
