@@ -1,5 +1,7 @@
 const std = @import("std");
 
+const Tile = u9;
+
 pub fn neighbors_for_tile(x: u8, y: u8) [20]usize {
     @setEvalBranchQuota(10000);
 
@@ -62,7 +64,7 @@ pub fn board_from_tiles(tiles: [81]u8) u729 {
     return board.*;
 }
 
-pub fn get(board: u729, index: u8) u16 {
+pub fn get(board: u729, index: u8) Tile {
     return @truncate(board >> (@as(u10, index) * 9));
 }
 
@@ -72,13 +74,13 @@ pub fn set(board: *u729, index: u8, value: u8) bool {
     return set_mask(board, index, mask);
 }
 
-pub fn set_mask(board: *u729, index: u8, mask: u16) bool {
+pub fn set_mask(board: *u729, index: u8, mask: Tile) bool {
     board.* &= ~(@as(u729, ~mask) << (@as(u10, index) * 9));
 
     return set_neighbors_mask(board, index, mask);
 }
 
-fn set_neighbors_mask(board: *u729, index: usize, mask: u16) bool {
+fn set_neighbors_mask(board: *u729, index: usize, mask: Tile) bool {
     for (Neighbors[index]) |neighbor| {
         // std.debug.print("TILE: {any}, NEIGHBOR: {any}\n", .{index, neighbor});
 
