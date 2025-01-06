@@ -133,6 +133,8 @@ impl Board {
             return true;
         }
 
+        if new == old {return false;}
+
         *unsafe { self.tiles.get_unchecked_mut(neighbor) } = new;
 
         let new_has_1_one = new & (new - 1) == 0;
