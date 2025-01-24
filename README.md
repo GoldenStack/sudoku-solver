@@ -1,6 +1,8 @@
 # sudoku solver
 
-Brute-force but still fairly optimized sudoku solver in several languages.
+Brute-force microoptimized sudoku solver in several languages (currently 2).
+
+Thanks to @mat-1 for helping with some optimization (specifically for Rust).
 
 ## Speed
 
