@@ -110,19 +110,23 @@ pub fn solve(board: *Board) bool {
     const old_board = board.*;
 
     const tile = best_tile.?;
-    var checked_number: usize = 0;
     var value = board[tile];
 
-    while (value != 0) : ({
-        value >>= 1;
-        checked_number += 1;
-    }) {
-        if (value & 1 == 0) continue;
+    while (value != 0) {
+        // Extract the first set bit as a mask.
+        // This should compile to `blsi` on x86_64, which is rather fast.
+        // This is inspired by a blog post from Daniel Lemire, adapted to
+        // unsigned integers via twos complement.
+        // https://lemire.me/blog/2018/02/21/iterating-over-set-bits-quickly/
+        const set_bit = value & (~value + 1);
 
-        if (set(board, tile, @as(Tile, 1) << @intCast(checked_number)) and solve(board)) {
+        if (set(board, tile, set_bit) and solve(board)) {
             return true;
         }
+
+        // Otherwise, revert board and unset the bit (as it can't be this one).
         board.* = old_board;
+        value ^= set_bit;
     }
 
     return false; // No possibilities resulted in a solve. Rip!
