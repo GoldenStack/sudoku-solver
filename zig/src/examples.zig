@@ -1,7 +1,33 @@
 const sudoku = @import("sudoku.zig");
+const sudoku_flat_cached = @import("sudoku-flat-cached.zig");
 
 pub fn verify_example(start: [81]u8, solution: [81]u8) bool {
     var raw_board = sudoku.board_from_tiles(start);
+    const board = &raw_board;
+
+    if (!sudoku.solve(board)) {
+        return false;
+    }
+
+    var solved = [_]sudoku.Tile{0} ** 81;
+
+    for (&solution, 0..) |*n, index| {
+        if (n.* != 0) {
+            solved[index] = @as(sudoku.Tile, 1) << @intCast(n.* - 1);
+        }
+    }
+
+    for (board.*, solved) |a, b| {
+        if (a != b) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+pub fn verify_example_flat_cached(start: [81]u8, solution: [81]u8) bool {
+    var raw_board = sudoku_flat_cached.board_from_tiles(start);
     const board = &raw_board;
 
     if (!sudoku.solve(board)) {

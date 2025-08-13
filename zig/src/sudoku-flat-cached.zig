@@ -49,38 +49,48 @@ fn neighbors_for_board() [81][20]usize {
 
 pub const Neighbors = neighbors_for_board();
 
-pub const Tile = u32;
-pub const Board = [81]Tile;
+pub const Board = struct { states: [729]u1, counts: [81]u32 };
 
 pub fn board_from_tiles(tiles: [81]u8) Board {
-    var combined = [_]Tile{0b111111111} ** 81;
+    var combined = Board{
+        .states = [_]u1{1} ** 729,
+        .counts = [_]u32{9} ** 81,
+    };
     const board = &combined;
 
     for (&tiles, 0..) |*tile, index| {
         if (tile.* != 0) {
-            _ = set(board, index, @as(Tile, 1) << @intCast(tile.* - 1));
+            _ = set(board, index, tile.* - 1);
         }
     }
 
     return board.*;
 }
 
-pub fn set(board: *Board, index: usize, mask: Tile) bool {
-    board[index] = mask;
-    return set_neighbors(board, index, mask);
+pub fn get_any(board: Board, index: usize) usize {
+    inline for (0..9) |i| {
+        if (board.states[index * 9 + i] == 1) return i;
+    }
+    unreachable;
 }
 
-pub fn set_neighbors(board: *Board, index: usize, mask: Tile) bool {
+pub fn set(board: *Board, index: usize, value: usize) bool {
+    inline for (0..9) |i| {
+        board.states[index * 9 + i] = @intFromBool(i == value);
+    }
+    board.counts[index] = 1;
+
+    return set_neighbors(board, index, value);
+}
+
+fn set_neighbors(board: *Board, index: usize, value: usize) bool {
     inline for (Neighbors[index]) |neighbor| {
-        const old = board[neighbor];
-        const new = old & ~mask & 0b111111111;
+        if (board.states[neighbor * 9 + value] != 0) {
+            board.states[neighbor * 9 + value] = 0;
+            board.counts[neighbor] -= 1;
 
-        if (new == 0) return false;
-        if (new != old) {
-            board[neighbor] = new;
-
-            // TODO: Potentially optimize further by having a list of neighbors for every tile that EXCLUDES every given tile. would save one iteration
-            if (new & (new - 1) == 0 and ((old ^ mask) & ((old ^ mask) - 1)) == 0 and !set_neighbors(board, neighbor, new)) {
+            const count = board.counts[neighbor];
+            if (count == 0 or (count == 1 and !set_neighbors(board, neighbor, get_any(board.*, neighbor)))) {
                 return false;
             }
         }
@@ -94,7 +104,7 @@ pub fn solve(board: *Board) bool {
     var least_ones: usize = 127; // Arbitrary value
 
     for (0..81) |index| {
-        const ones_in_tile = @popCount(board[index]);
+        const ones_in_tile = board.counts[index];
 
         if (ones_in_tile > 1 and ones_in_tile < least_ones) {
             best_tile = index;
@@ -110,18 +120,17 @@ pub fn solve(board: *Board) bool {
     const old_board = board.*;
 
     const tile = best_tile.?;
+    var possibilities = least_ones;
     var checked_number: usize = 0;
-    var value = board[tile];
 
-    while (value != 0) : ({
-        value >>= 1;
-        checked_number += 1;
-    }) {
-        if (value & 1 == 0) continue;
+    while (possibilities > 0) : (checked_number += 1) {
+        if (board.states[tile * 9 + checked_number] == 0) continue;
 
-        if (set(board, tile, @as(Tile, 1) << @intCast(checked_number)) and solve(board)) {
+        if (set(board, tile, checked_number) and solve(board)) {
             return true;
         }
+
+        possibilities -= 1;
         board.* = old_board;
     }
 
