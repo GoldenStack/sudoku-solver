@@ -1,8 +1,11 @@
 const std = @import("std");
 
+/// Determine the static list of 20 neighbors for the given tile.
 pub fn neighbors_for_tile(x: u8, y: u8) [20]usize {
     @setEvalBranchQuota(10000);
 
+    // Manually track the index because it's simpler to avoid having a compile-
+    // time allocated list.
     var neighbors = [_]usize{0} ** 20;
     var index: usize = 0;
 
@@ -37,6 +40,7 @@ pub fn neighbors_for_tile(x: u8, y: u8) [20]usize {
     return neighbors;
 }
 
+/// Determine the list of 20 neighbors for each of the 81 tiles.
 fn neighbors_for_board() [81][20]usize {
     var items = [_][20]usize{[_]usize{0} ** 20} ** 81;
 
@@ -52,6 +56,8 @@ pub const Neighbors = neighbors_for_board();
 pub const Tile = u32;
 pub const Board = [81]Tile;
 
+/// Construct the board mask from the list of the numerical value of each tile,
+/// or zero if unknown.
 pub fn board_from_tiles(tiles: [81]u8) Board {
     var combined = [_]Tile{0b111111111} ** 81;
     const board = &combined;
