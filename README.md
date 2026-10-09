@@ -17,6 +17,11 @@ I found this a bit strange since Rust is faster for the simple benchmark but is
 slower for the complex one. I didn't really feel like looking into it though, so
 that'll be a mystery for now.
 
+For puzzles that don't require making any guesses, comparative benchmarks
+on my machine indicate that this solver runs 6-16% faster than competing
+solvers (tdoku, etc.), and up to 4 orders of magnitude faster than other
+miscellaneous solvers I've been able to find.
+
 ## Usage
 
 Rust:
