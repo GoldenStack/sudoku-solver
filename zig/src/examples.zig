@@ -3,6 +3,7 @@ const std = @import("std");
 /// Verifies an example for a given sudoku implementation.
 /// `sudoku` requires:
 /// - `board_from_tiles :: [81]u8 -> sudoku.Board`
+/// - `board_from_solved :: [81]u8 -> sudoku.Board`
 /// - `solve :: *sudoku.Board -> bool`
 /// - No extra metadata: `std.mem.eql` suffices for solution verification.
 pub fn verify_example(sudoku: type, start: [81]u8, solution: [81]u8) bool {
@@ -12,7 +13,7 @@ pub fn verify_example(sudoku: type, start: [81]u8, solution: [81]u8) bool {
         return false;
     }
 
-    const solution_board = sudoku.board_from_tiles(solution);
+    const solution_board = sudoku.board_from_solved(solution);
 
     return std.meta.eql(solution_board, board);
 }

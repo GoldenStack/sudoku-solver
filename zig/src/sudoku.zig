@@ -71,6 +71,18 @@ pub fn board_from_tiles(tiles: [81]u8) Board {
     return board.*;
 }
 
+pub fn board_from_solved(tiles: [81]u8) Board {
+    var combined = [_]Tile{0b111111111} ** 81;
+    const board = &combined;
+
+    for (&tiles, 0..) |*tile, index| {
+        board[index] = @as(Tile, 1) << @intCast(tile.* - 1);
+    }
+
+    return board.*;
+    
+}
+
 /// Sets the value of the given tile `index` to the provided mask. The mask
 /// **must** have a population count of 1.
 fn set(board: *Board, index: usize, mask: Tile) bool {

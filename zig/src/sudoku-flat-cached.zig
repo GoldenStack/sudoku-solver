@@ -49,11 +49,14 @@ fn neighbors_for_board() [81][20]usize {
 
 pub const Neighbors = neighbors_for_board();
 
-pub const Board = struct { states: [729]u1, counts: [81]u32 };
+pub const Board = struct {
+    states: std.bit_set.ArrayBitSet(u32, 729),
+    counts: [81]u32,
+};
 
 pub fn board_from_tiles(tiles: [81]u8) Board {
     var combined = Board{
-        .states = [_]u1{1} ** 729,
+        .states = .initFull(),
         .counts = [_]u32{9} ** 81,
     };
     const board = &combined;
@@ -67,16 +70,34 @@ pub fn board_from_tiles(tiles: [81]u8) Board {
     return board.*;
 }
 
+pub fn board_from_solved(tiles: [81]u8) Board {
+    var combined = Board{
+        .states = .initEmpty(),
+        .counts = [_]u32{1} ** 81,
+    };
+    const board = &combined;
+
+    for (&tiles, 0..) |*tile, index| {
+        board.states.set(index * 9 + (tile.* - 1));
+    }
+
+    return board.*;
+}
+
 pub fn get_any(board: Board, index: usize) usize {
     inline for (0..9) |i| {
-        if (board.states[index * 9 + i] == 1) return i;
+        if (board.states.isSet(index * 9 + i)) return i;
     }
     unreachable;
 }
 
 pub fn set(board: *Board, index: usize, value: usize) bool {
     inline for (0..9) |i| {
-        board.states[index * 9 + i] = @intFromBool(i == value);
+        if (i == value) {
+            board.states.set(index * 9 + i);
+        } else {
+            board.states.unset(index * 9 + i);
+        }
     }
     board.counts[index] = 1;
 
@@ -85,8 +106,8 @@ pub fn set(board: *Board, index: usize, value: usize) bool {
 
 fn set_neighbors(board: *Board, index: usize, value: usize) bool {
     inline for (Neighbors[index]) |neighbor| {
-        if (board.states[neighbor * 9 + value] != 0) {
-            board.states[neighbor * 9 + value] = 0;
+        if (board.states.isSet(neighbor * 9 + value)) {
+            board.states.unset(neighbor * 9 + value);
             board.counts[neighbor] -= 1;
 
             const count = board.counts[neighbor];
@@ -124,7 +145,8 @@ pub fn solve(board: *Board) bool {
     var checked_number: usize = 0;
 
     while (possibilities > 0) : (checked_number += 1) {
-        if (board.states[tile * 9 + checked_number] == 0) continue;
+        std.debug.assert(checked_number < 9);
+        if (!board.states.isSet(tile * 9 + checked_number)) continue;
 
         if (set(board, tile, checked_number) and solve(board)) {
             return true;
