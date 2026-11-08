@@ -3,7 +3,8 @@ const sudoku = @import("sudoku.zig");
 const examples = @import("examples.zig");
 
 pub fn main() !void {
-    const stdout = std.io.getStdOut().writer();
+    const stdout_writer = std.fs.File.stdout().writer(&.{});
+    var stdout = stdout_writer.interface;
 
     // Verify that the code can actually solve the examples
     try stdout.print("Verified Easy: {any}\n", .{examples.verify_example(examples.EASY, examples.EASY_SOLUTION)});
