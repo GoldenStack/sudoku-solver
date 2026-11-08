@@ -30,7 +30,7 @@ pub fn verify_example_flat_cached(start: [81]u8, solution: [81]u8) bool {
     var raw_board = sudoku_flat_cached.board_from_tiles(start);
     const board = &raw_board;
 
-    if (!sudoku.solve(board)) {
+    if (!sudoku_flat_cached.solve(board)) {
         return false;
     }
 
