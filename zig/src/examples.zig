@@ -12,9 +12,9 @@ pub fn verify_example(sudoku: type, start: [81]u8, solution: [81]u8) bool {
         return false;
     }
 
-    const solved = sudoku.board_from_tiles(solution);
+    const solution_board = sudoku.board_from_tiles(solution);
 
-    return std.meta.eql(&solved, &board);
+    return std.meta.eql(solution_board, board);
 }
 
 pub const EASY: [81]u8 = .{
