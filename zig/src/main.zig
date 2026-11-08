@@ -13,8 +13,8 @@ pub fn main() !void {
     try stdout.print("Verified Hard: {any}\n", .{examples.verify_example(sudoku, examples.HARD, examples.HARD_SOLUTION)});
 
     // Test settings
-    const warmup_iterations = 50_000;
-    const iterations = 500_000;
+    const iterations = 6_000_000;
+    const warmup_iterations = iterations / 10;
 
     const test_case = examples.EASY;
 
