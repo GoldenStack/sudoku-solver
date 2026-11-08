@@ -1,11 +1,11 @@
 const sudoku = @import("sudoku.zig");
 const sudoku_flat_cached = @import("sudoku-flat-cached.zig");
+const std = @import("std");
 
 pub fn verify_example(start: [81]u8, solution: [81]u8) bool {
-    var raw_board = sudoku.board_from_tiles(start);
-    const board = &raw_board;
+    var board = sudoku.board_from_tiles(start);
 
-    if (!sudoku.solve(board)) {
+    if (!sudoku.solve(&board)) {
         return false;
     }
 
@@ -16,21 +16,15 @@ pub fn verify_example(start: [81]u8, solution: [81]u8) bool {
             solved[index] = @as(sudoku.Tile, 1) << @intCast(n.* - 1);
         }
     }
+    
 
-    for (board.*, solved) |a, b| {
-        if (a != b) {
-            return false;
-        }
-    }
-
-    return true;
+    return std.mem.eql(sudoku.Tile, &board, &solved);
 }
 
 pub fn verify_example_flat_cached(start: [81]u8, solution: [81]u8) bool {
-    var raw_board = sudoku_flat_cached.board_from_tiles(start);
-    const board = &raw_board;
+    var board = sudoku_flat_cached.board_from_tiles(start);
 
-    if (!sudoku_flat_cached.solve(board)) {
+    if (!sudoku_flat_cached.solve(&board)) {
         return false;
     }
 
@@ -41,14 +35,8 @@ pub fn verify_example_flat_cached(start: [81]u8, solution: [81]u8) bool {
             solved[index * 9 + @as(usize, @intCast(n.* - 1))] = 1;
         }
     }
-
-    for (board.states, solved) |a, b| {
-        if (a != b) {
-            return false;
-        }
-    }
-
-    return true;
+    
+    return std.mem.eql(sudoku.Tile, &board, &solved);
 }
 
 pub const EASY: [81]u8 = .{
