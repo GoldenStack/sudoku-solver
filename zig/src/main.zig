@@ -2,8 +2,8 @@ const std = @import("std");
 const examples = @import("examples.zig");
 
 pub fn main() !void {
-    const stdout_writer = std.fs.File.stdout().writer(&.{});
-    var stdout = stdout_writer.interface;
+    var stdout_writer = std.fs.File.stdout().writer(&.{});
+    var stdout = &stdout_writer.interface;
 
     const sudoku = @import("sudoku-flat-cached.zig");
 
