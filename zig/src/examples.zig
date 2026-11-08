@@ -1,42 +1,20 @@
-const sudoku = @import("sudoku.zig");
-const sudoku_flat_cached = @import("sudoku-flat-cached.zig");
 const std = @import("std");
 
-pub fn verify_example(start: [81]u8, solution: [81]u8) bool {
+/// Verifies an example for a given sudoku implementation.
+/// `sudoku` requires:
+/// - `board_from_tiles :: [81]u8 -> sudoku.Board`
+/// - `solve :: *sudoku.Board -> bool`
+/// - No extra metadata: `std.mem.eql` suffices for solution verification.
+pub fn verify_example(sudoku: type, start: [81]u8, solution: [81]u8) bool {
     var board = sudoku.board_from_tiles(start);
 
     if (!sudoku.solve(&board)) {
         return false;
     }
 
-    var solved = [_]sudoku.Tile{0} ** 81;
+    const solved = sudoku.board_from_tiles(solution);
 
-    for (&solution, 0..) |*n, index| {
-        if (n.* != 0) {
-            solved[index] = @as(sudoku.Tile, 1) << @intCast(n.* - 1);
-        }
-    }
-    
-
-    return std.mem.eql(sudoku.Tile, &board, &solved);
-}
-
-pub fn verify_example_flat_cached(start: [81]u8, solution: [81]u8) bool {
-    var board = sudoku_flat_cached.board_from_tiles(start);
-
-    if (!sudoku_flat_cached.solve(&board)) {
-        return false;
-    }
-
-    var solved = [_]u1{0} ** 729;
-
-    for (&solution, 0..) |*n, index| {
-        if (n.* != 0) {
-            solved[index * 9 + @as(usize, @intCast(n.* - 1))] = 1;
-        }
-    }
-    
-    return std.mem.eql(sudoku.Tile, &board, &solved);
+    return std.meta.eql(&solved, &board);
 }
 
 pub const EASY: [81]u8 = .{

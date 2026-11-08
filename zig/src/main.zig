@@ -1,15 +1,16 @@
 const std = @import("std");
-const sudoku = @import("sudoku.zig");
 const examples = @import("examples.zig");
 
 pub fn main() !void {
     const stdout_writer = std.fs.File.stdout().writer(&.{});
     var stdout = stdout_writer.interface;
 
+    const sudoku = @import("sudoku-flat-cached.zig");
+
     // Verify that the code can actually solve the examples
-    try stdout.print("Verified Easy: {any}\n", .{examples.verify_example(examples.EASY, examples.EASY_SOLUTION)});
-    try stdout.print("Verified Medium: {any}\n", .{examples.verify_example(examples.MEDIUM, examples.MEDIUM_SOLUTION)});
-    try stdout.print("Verified Hard: {any}\n", .{examples.verify_example(examples.HARD, examples.HARD_SOLUTION)});
+    try stdout.print("Verified Easy: {any}\n", .{examples.verify_example(sudoku, examples.EASY, examples.EASY_SOLUTION)});
+    try stdout.print("Verified Medium: {any}\n", .{examples.verify_example(sudoku, examples.MEDIUM, examples.MEDIUM_SOLUTION)});
+    try stdout.print("Verified Hard: {any}\n", .{examples.verify_example(sudoku, examples.HARD, examples.HARD_SOLUTION)});
 
     // Test settings
     const warmup_iterations = 50_000;
