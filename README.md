@@ -39,15 +39,15 @@ comparison upon each set. However, it would only improve the performance once
 guesses are required in order to solve. As this solver is currently only highly
 competitive for easy puzzles, we choose to keep our advantage for easy solves.
 
-- Cell flattening: current implementations have `@sizeOf(Tile) - 9 = 23` extra
-padding bits. If we instead use a `std.bit_set.ArrayBitSet`, we can pack this
-into a much smaller size. This speeds up backtracking, as boards are smaller and
-require less stack space and less copying. However, this also makes population
-counting a problem: without the padding, extra masking and, often, population
-counts across CPU word borders requires a lot of extra logic. To solve this, we
-cache the population count of each cell, saving a few instructions.
-Unfortunately, as per `sudoku-flat-cached.zig`, this does not result in
-performance increases.
+- Cell flattening: current implementations have `@bitSizeOf(Tile) - 9 = 23`
+extra padding bits. If we instead use a `std.bit_set.ArrayBitSet`, we can pack
+this into a much smaller size. This speeds up backtracking, as boards are
+smaller and require less stack space and less copying. However, this also makes
+population counting a problem: without the padding, extra masking and, often,
+population counts across CPU word borders requires a lot of extra logic. To
+solve this, we cache the population count of each cell, saving a few
+instructions. Unfortunately, as per `sudoku-flat-cached.zig`, this does not
+result in performance increases.
 
 ## Usage
 
