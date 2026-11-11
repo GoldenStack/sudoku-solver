@@ -5,7 +5,7 @@ pub fn main() !void {
     var stdout_writer = std.fs.File.stdout().writer(&.{});
     var stdout = &stdout_writer.interface;
 
-    const sudoku = @import("sudoku.zig");
+    const sudoku = @import("sudoku-rowcol.zig");
 
     // Verify that the code can actually solve the examples
     try stdout.print("Verified Easy: {any}\n", .{examples.verify_example(sudoku, examples.EASY, examples.EASY_SOLUTION)});
