@@ -1,13 +1,13 @@
 const std = @import("std");
 
 /// Determine the static list of 20 neighbors for the given tile.
-pub fn neighbors_for_tile(x: u8, y: u8) [20]usize {
+pub fn neighbors_for_tile(x: u8, y: u8) [20]NeighborLUT {
     @setEvalBranchQuota(10000);
 
     // Manually track the index because it's simpler to avoid having a compile-
     // time allocated list.
-    var neighbors = [_]usize{0} ** 20;
-    var index: usize = 0;
+    var neighbors = [_]NeighborLUT{0} ** 20;
+    var index: NeighborLUT = 0;
 
     const block_x = (x / 3) * 3;
     const block_y = (y / 3) * 3;
@@ -41,8 +41,8 @@ pub fn neighbors_for_tile(x: u8, y: u8) [20]usize {
 }
 
 /// Determine the list of 20 neighbors for each of the 81 tiles.
-fn neighbors_for_board() [81][20]usize {
-    var items = [_][20]usize{[_]usize{0} ** 20} ** 81;
+fn neighbors_for_board() [81][20]NeighborLUT {
+    var items = [_][20]NeighborLUT{[_]NeighborLUT{0} ** 20} ** 81;
 
     for (&items, 0..) |*item, index| {
         item.* = neighbors_for_tile(index % 9, index / 9);
@@ -54,6 +54,8 @@ fn neighbors_for_board() [81][20]usize {
 pub const Neighbors = neighbors_for_board();
 
 pub const Tile = u32;
+pub const NeighborLUT = u16;
+
 pub const Board = [81]Tile;
 
 /// Construct the board mask from the list of the numerical value of each tile,
