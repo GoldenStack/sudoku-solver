@@ -1,13 +1,13 @@
 const std = @import("std");
 
 /// Determine the static list of 20 neighbors for the given tile.
-pub fn neighbors_for_tile(x: u8, y: u8) [20]usize {
+pub fn neighbors_for_tile(x: u8, y: u8) [20]NeighborLUT {
     @setEvalBranchQuota(10000);
 
     // Manually track the index because it's simpler to avoid having a compile-
     // time allocated list.
-    var neighbors = [_]usize{0} ** 20;
-    var index: usize = 0;
+    var neighbors = [_]NeighborLUT{0} ** 20;
+    var index: NeighborLUT = 0;
 
     const block_x = (x / 3) * 3;
     const block_y = (y / 3) * 3;
@@ -41,8 +41,8 @@ pub fn neighbors_for_tile(x: u8, y: u8) [20]usize {
 }
 
 /// Determine the list of 20 neighbors for each of the 81 tiles.
-fn neighbors_for_board() [81][20]usize {
-    var items = [_][20]usize{[_]usize{0} ** 20} ** 81;
+fn neighbors_for_board() [81][20]NeighborLUT {
+    var items = [_][20]NeighborLUT{[_]NeighborLUT{0} ** 20} ** 81;
 
     for (&items, 0..) |*item, index| {
         item.* = neighbors_for_tile(index % 9, index / 9);
@@ -54,10 +54,11 @@ fn neighbors_for_board() [81][20]usize {
 pub const Neighbors = neighbors_for_board();
 
 pub const Tile = u32;
+pub const NeighborLUT = u16;
 
 pub const Mask = u32;
 
-pub const SENTINEL = 65535;
+pub const Index = u8;
 
 pub const Board = struct {
     states: [81]Tile,
@@ -73,7 +74,7 @@ pub const Board = struct {
         for (0..9) |row| {
             for (0..9) |col| {
                 const state = self.states[row * 9 + col];
-                if (state == SENTINEL) {
+                if (state == std.math.maxInt(Tile)) {
                     try writer.print("_ ", .{});
                 } else {
                     try writer.print("{} ", .{std.math.log2(state)});
@@ -138,7 +139,7 @@ pub const Board = struct {
 /// or zero if unknown.
 pub fn board_from_tiles(tiles: [81]u8) Board {
     var board: Board = .{
-        .states = [_]Tile{SENTINEL} ** 81,
+        .states = [_]Tile{std.math.maxInt(Tile)} ** 81,
         .row_mask = [_]Mask{0b111111111} ** 9,
         .col_mask = [_]Mask{0b111111111} ** 9,
         .sqr_mask = [_]Mask{0b111111111} ** 9,
@@ -146,7 +147,7 @@ pub fn board_from_tiles(tiles: [81]u8) Board {
 
     for (&tiles, 0..) |*tile, index| {
         if (tile.* != 0) {
-            _ = set(&board, index, @as(Tile, 1) << @truncate(tile.* - 1));
+            _ = set(&board, @intCast(index), @as(Tile, 1) << @truncate(tile.* - 1));
         }
     }
 
@@ -167,7 +168,7 @@ pub fn board_from_solved(tiles: [81]u8) Board {
     };
 }
 
-inline fn i2p(index: usize) struct { usize, usize, usize } {
+inline fn i2p(index: Index) struct { Index, Index, Index } {
     // std.debug.assert(index >= 0);
     // std.debug.assert(index <= 81);
     const row = index / 9;
@@ -179,7 +180,7 @@ inline fn i2p(index: usize) struct { usize, usize, usize } {
 
 /// Sets the value of the given tile `index` to the provided mask. The mask
 /// **must** have a population count of 1.
-fn set(board: *Board, index: usize, mask: Tile) bool {
+fn set(board: *Board, index: Index, mask: Tile) bool {
     const row, const col, const sqr = i2p(index);
 
     std.debug.assert(@popCount(mask) == 1);
@@ -188,7 +189,7 @@ fn set(board: *Board, index: usize, mask: Tile) bool {
         return true;
     }
 
-    std.debug.assert(board.states[index] == SENTINEL);
+    std.debug.assert(board.states[index] == std.math.maxInt(Tile));
 
     // std.debug.print("{f}\n", .{board});
     std.debug.assert(board.row_mask[row] & mask != 0);
@@ -215,11 +216,11 @@ fn set(board: *Board, index: usize, mask: Tile) bool {
 /// because the cell might have its value stored already, but here it'd have
 /// the sentinel.
 /// Thus, we can do a simple check.
-inline fn set_neighbors(board: *Board, index: usize) bool {
+inline fn set_neighbors(board: *Board, index: Index) bool {
     inline for (Neighbors[index]) |neighbor| {
         // TODO: We could also check (board.other_mask1[other1] | board.other_mask2[other2]) & mask != 0
-        if (board.states[neighbor] == SENTINEL) {
-            const row, const col, const sqr = i2p(neighbor);
+        if (board.states[neighbor] == std.math.maxInt(Tile)) {
+            const row, const col, const sqr = i2p(@intCast(neighbor));
 
             // Find the current value of the neighbor.
             const value = board.row_mask[row] & board.col_mask[col] & board.sqr_mask[sqr];
@@ -228,7 +229,7 @@ inline fn set_neighbors(board: *Board, index: usize) bool {
             if (value == 0) return false;
 
             // If there is only one possible value for the cell, set it.
-            if (value & (value - 1) == 0 and !set(board, neighbor, value)) {
+            if (value & (value - 1) == 0 and !set(board, @intCast(neighbor), value)) {
                 return false;
             }
         }
@@ -244,12 +245,12 @@ pub fn solve(board: *Board) bool {
     // Search for the unsolved (>=2 possible values) tile with the least
     // possible values. This has a fast path for any cell with two possible
     // values left.
-    var best_tile: ?usize = null;
-    var least_ones: usize = SENTINEL;
+    var best_tile: Index = std.math.maxInt(Index);
+    var least_ones: Index = std.math.maxInt(Index);
 
     for (0..81) |index| {
-        if (board.states[index] != SENTINEL) continue;
-        const row, const col, const sqr = i2p(index);
+        if (board.states[index] != std.math.maxInt(Tile)) continue;
+        const row, const col, const sqr = i2p(@intCast(index));
 
         const tile = board.row_mask[row] & board.col_mask[col] & board.sqr_mask[sqr];
 
@@ -258,21 +259,19 @@ pub fn solve(board: *Board) bool {
         // If 2 <= possible values < current best, update it.
         std.debug.assert(ones_in_tile > 1);
         if (ones_in_tile < least_ones) {
-            best_tile = index;
+            best_tile = @intCast(index);
             least_ones = ones_in_tile;
             if (ones_in_tile == 2) break; // Fast path for the smallest possible
         }
     }
 
     // If there's no tile, the board is solved.
-    if (best_tile == null) return true;
+    if (best_tile == std.math.maxInt(Index)) return true;
 
     // Make a copy of the board to restore later.
     const old_board = board.*;
 
-    const tile = best_tile.?;
-
-    const row, const col, const sqr = i2p(tile);
+    const row, const col, const sqr = i2p(best_tile);
 
     var value = board.row_mask[row] & board.col_mask[col] & board.sqr_mask[sqr];
 
@@ -287,7 +286,7 @@ pub fn solve(board: *Board) bool {
         // std.debug.print("    ({}, {}) -> {}\n", .{ row, col, std.math.log2(set_bit) });
 
         // If we can solve the board with this change, just return it.
-        if (set(board, tile, set_bit) and solve(board)) {
+        if (set(board, best_tile, set_bit) and solve(board)) {
             return true;
         }
 
