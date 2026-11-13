@@ -53,6 +53,26 @@ fn neighbors_for_board() [81][20]NeighborLUT {
 
 pub const Neighbors = neighbors_for_board();
 
+pub fn row_col_sqr_for_tile(index: usize) struct { Index, Index, Index } {
+    const row = index / 9;
+    const col = index % 9;
+    const sqr = (row / 3) * 3 + col / 3;
+
+    return .{ row, col, sqr };
+}
+
+fn row_col_sqr_for_board() [81]struct { Index, Index, Index } {
+    var items: [81]struct { Index, Index, Index } = undefined;
+
+    for (&items, 0..) |*item, index| {
+        item.* = row_col_sqr_for_tile(index);
+    }
+
+    return items;
+}
+
+pub const RCS = row_col_sqr_for_board();
+
 pub const Tile = u32;
 pub const NeighborLUT = u16;
 
@@ -169,13 +189,7 @@ pub fn board_from_solved(tiles: [81]u8) Board {
 }
 
 inline fn i2p(index: Index) struct { Index, Index, Index } {
-    // std.debug.assert(index >= 0);
-    // std.debug.assert(index <= 81);
-    const row = index / 9;
-    const col = index % 9;
-    const sqr = (row / 3) * 3 + col / 3;
-
-    return .{ row, col, sqr };
+    return RCS[index];
 }
 
 /// Sets the value of the given tile `index` to the provided mask. The mask
