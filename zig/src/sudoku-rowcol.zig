@@ -205,7 +205,6 @@ fn set(board: *Board, index: Index, mask: Tile) bool {
 
     std.debug.assert(board.states[index] == std.math.maxInt(Tile));
 
-    // std.debug.print("{f}\n", .{board});
     std.debug.assert(board.row_mask[row] & mask != 0);
     std.debug.assert(board.col_mask[col] & mask != 0);
     std.debug.assert(board.sqr_mask[sqr] & mask != 0);
@@ -289,7 +288,6 @@ pub fn solve(board: *Board) bool {
 
     var value = board.row_mask[row] & board.col_mask[col] & board.sqr_mask[sqr];
 
-    // std.debug.print("swapping ({}, {}) to {} values\n", .{ row, col, @popCount(value) });
     while (value != 0) {
         // Extract the first set bit as a mask.
         // This should compile to `blsi` on x86_64, which is rather fast.
@@ -297,7 +295,6 @@ pub fn solve(board: *Board) bool {
         // unsigned integers via two's complement.
         // https://lemire.me/blog/2018/02/21/iterating-over-set-bits-quickly/
         const set_bit = value & (~value + 1);
-        // std.debug.print("    ({}, {}) -> {}\n", .{ row, col, std.math.log2(set_bit) });
 
         // If we can solve the board with this change, just return it.
         if (set(board, best_tile, set_bit) and solve(board)) {
