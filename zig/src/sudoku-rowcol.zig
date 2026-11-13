@@ -195,26 +195,17 @@ inline fn i2p(index: Index) struct { Index, Index, Index } {
 /// Sets the value of the given tile `index` to the provided mask. The mask
 /// **must** have a population count of 1.
 fn set(board: *Board, index: Index, mask: Tile) bool {
-    const row, const col, const sqr = i2p(index);
-
-    std.debug.assert(@popCount(mask) == 1);
-
     if (board.states[index] == mask) {
         return true;
     }
 
-    std.debug.assert(board.states[index] == std.math.maxInt(Tile));
-
-    std.debug.assert(board.row_mask[row] & mask != 0);
-    std.debug.assert(board.col_mask[col] & mask != 0);
-    std.debug.assert(board.sqr_mask[sqr] & mask != 0);
+    const row, const col, const sqr = i2p(index);
 
     board.states[index] = mask;
     board.row_mask[row] ^= mask;
     board.col_mask[col] ^= mask;
     board.sqr_mask[sqr] ^= mask;
 
-    // Iterate through the 20 pre-calculated neighbors
     return @call(.always_tail, set_neighbors, .{ board, index });
 }
 
@@ -231,7 +222,6 @@ fn set(board: *Board, index: Index, mask: Tile) bool {
 /// Thus, we can do a simple check.
 inline fn set_neighbors(board: *Board, index: Index) bool {
     inline for (Neighbors[index]) |neighbor| {
-        // TODO: We could also check (board.other_mask1[other1] | board.other_mask2[other2]) & mask != 0
         if (board.states[neighbor] == std.math.maxInt(Tile)) {
             const row, const col, const sqr = i2p(@intCast(neighbor));
 
@@ -263,6 +253,7 @@ pub fn solve(board: *Board) bool {
 
     for (0..81) |index| {
         if (board.states[index] != std.math.maxInt(Tile)) continue;
+
         const row, const col, const sqr = i2p(@intCast(index));
 
         const tile = board.row_mask[row] & board.col_mask[col] & board.sqr_mask[sqr];
